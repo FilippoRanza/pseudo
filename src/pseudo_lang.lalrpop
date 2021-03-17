@@ -1,0 +1,162 @@
+
+use crate::ast;
+
+#[LALR]
+grammar;
+
+
+pub Code : ast::Code<'input> = {
+    <caption: Caption>
+    <code: PseudoCode> => ast::Code{<>}
+
+}
+
+Caption: &'input str = {
+    caption_kw  open <Text> end 
+}
+
+PseudoCode: Vec<ast::Command<'input>> = {
+    code_kw open <PCode> end
+}
+
+PCode: Vec<ast::Command<'input>> = {
+    <cmd: (Command)+> => cmd
+}
+
+Command: ast::Command<'input> = {
+    <blk: DeclBlock> => ast::Command::Declaration(blk),
+    <blk: AssignBlock> => ast::Command::Assign(blk),
+    <blk: CondBlock> => ast::Command::Condition(blk),
+    <blk: ForBlock> => ast::Command::ForLoop(blk),
+    <blk: WhileBlock> => ast::Command::WhileLoop(blk),
+    <blk: ReturnBlock> => ast::Command::Return(blk),
+}
+
+WhileBlock: ast::ConditionPair<'input> = {
+    while_kw <cond: Text> open <body: PCode> end => ast::ConditionPair {<>}
+}
+
+ReturnBlock: &'input str = {
+    return_kw <Text> 
+}
+
+
+DeclBlock: ast::DeclBlock<'input> = {
+    decl_kw <DeclList> semicolon
+}
+
+DeclList: ast::DeclBlock<'input> = {
+    <list: (<Decl> comma)*> <d: Decl> => {
+        let mut list =  list;
+        list.push(d);
+        list
+    }
+}
+
+Decl: ast::Decl<'input> = {
+    <n: Text> colon <t: Text> => (n, t)
+}
+
+
+AssignBlock: ast::Assign<'input> = {
+    <lhs: Text> eq <rhs: Text> semicolon => (lhs, rhs),
+    <lhs: Text> eq_decl <rhs: Text> semicolon => (lhs, rhs),
+    <lhs: Text> eq_arrow <rhs: Text> semicolon => (lhs, rhs),
+}
+
+
+CondBlock: ast::Condition<'input> = {
+    <if_block: IfBlock>
+    <elif_blocks: ElifBlockList> 
+    <else_block: (ElseBlock)?> => ast::Condition{<>}
+}
+
+IfBlock: ast::ConditionPair<'input> = {
+    if_kw <cond: Text> open <body: PCode> end => ast::ConditionPair{<>}
+}
+
+ElifBlockList: Vec<ast::ConditionPair<'input>> = {
+    <(ElifBlock)*>
+}
+
+ElifBlock: ast::ConditionPair<'input> = {
+    elif_kw <cond: Text> open <body: PCode> end => ast::ConditionPair{<>}
+}
+
+ElseBlock: Vec<ast::Command<'input>> = {
+    else_kw open <PCode> end
+}
+
+
+ForBlock: ast::ForLoop<'input> = {
+    <IterForLoop>,
+    <CountForLoop>
+}
+
+IterForLoop: ast::ForLoop<'input> = {
+    for_kw <name: Text> in_kw <iter: Text> open <body: PCode> end 
+    => ast::ForLoop { 
+        kind: ast::ForLoopKind::Iter((name, iter)),
+        body
+    }
+}
+
+CountForLoop:  ast::ForLoop<'input> = {
+    for_kw <text: Text> eq 
+    <begin: Text> colon <end: Text> 
+    open <body: PCode> end 
+    => ast::ForLoop { 
+        kind: ast::ForLoopKind::Count((text, begin, end)),
+        body
+    }
+}
+
+open = "{";
+end = "}";
+caption_kw = "caption";
+code_kw = "code";
+decl_kw = "decl";
+return_kw = "return";
+semicolon = ";";
+while_kw = "while";
+comma = ",";
+eq = "=";
+eq_decl = ":=";
+eq_arrow = "<-";
+colon = ":";
+if_kw = "if";
+elif_kw = "elif";
+else_kw = "else";
+in_kw = "in";
+for_kw = "for";
+
+Text: &'input str = <r".+">;
+
+match {
+    r#"\s+"# => {},
+    r#"/\*([^*]|\*[^/])*\*/"# => {},
+    r#"//[^\n]+"# => {},
+
+    r"\{" => "{",
+    r"\}" => "}",
+    r"," => ",",
+    r":" => ":",
+    r"=" => "=",
+    r":=" => ":=",
+    r"<-" => "<-",
+    r";" => ";",
+
+    r"in" => "in",
+    r"caption" => "caption",
+    r"code" => "code",
+    r"for" => "for",
+    r"while" => "while",
+    r"if" => "if",
+    r"elif" => "elif",
+    r"else" => "else",
+    r"decl" => "decl",
+    r"return" => "return",
+    
+} else {
+    r".+"
+}

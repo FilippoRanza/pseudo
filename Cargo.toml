@@ -1,0 +1,12 @@
+[package]
+authors = ["FilippoRanza <filipporanza@gmail.com>"]
+edition = "2018"
+name = "pseudo"
+version = "0.1.0"
+[build-dependencies]
+lalrpop = "0.19"
+
+[dependencies]
+lalrpop-util = "0.19"
+regex = "1"
+structopt = "*"
