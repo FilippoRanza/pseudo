@@ -5,25 +5,25 @@ use crate::ast;
 grammar;
 
 
-pub Code : ast::Code<'input> = {
+pub Code : ast::Code = {
     <caption: Caption>
     <code: PseudoCode> => ast::Code{<>}
 
 }
 
-Caption: &'input str = {
+Caption: String = {
     caption_kw  open <Text> end 
 }
 
-PseudoCode: Vec<ast::Command<'input>> = {
+PseudoCode: Vec<ast::Command> = {
     code_kw open <PCode> end
 }
 
-PCode: Vec<ast::Command<'input>> = {
+PCode: Vec<ast::Command> = {
     <cmd: (Command)+> => cmd
 }
 
-Command: ast::Command<'input> = {
+Command: ast::Command = {
     <blk: DeclBlock> => ast::Command::Declaration(blk),
     <blk: AssignBlock> => ast::Command::Assign(blk),
     <blk: CondBlock> => ast::Command::Condition(blk),
@@ -32,20 +32,20 @@ Command: ast::Command<'input> = {
     <blk: ReturnBlock> => ast::Command::Return(blk),
 }
 
-WhileBlock: ast::ConditionPair<'input> = {
+WhileBlock: ast::ConditionPair = {
     while_kw <cond: Text> open <body: PCode> end => ast::ConditionPair {<>}
 }
 
-ReturnBlock: &'input str = {
-    return_kw <Text> 
+ReturnBlock: String = {
+    return_kw <Text> semicolon
 }
 
 
-DeclBlock: ast::DeclBlock<'input> = {
+DeclBlock: ast::DeclBlock = {
     decl_kw <DeclList> semicolon
 }
 
-DeclList: ast::DeclBlock<'input> = {
+DeclList: ast::DeclBlock = {
     <list: (<Decl> comma)*> <d: Decl> => {
         let mut list =  list;
         list.push(d);
@@ -53,47 +53,47 @@ DeclList: ast::DeclBlock<'input> = {
     }
 }
 
-Decl: ast::Decl<'input> = {
+Decl: ast::Decl = {
     <n: Text> colon <t: Text> => (n, t)
 }
 
 
-AssignBlock: ast::Assign<'input> = {
+AssignBlock: ast::Assign = {
     <lhs: Text> eq <rhs: Text> semicolon => (lhs, rhs),
     <lhs: Text> eq_decl <rhs: Text> semicolon => (lhs, rhs),
     <lhs: Text> eq_arrow <rhs: Text> semicolon => (lhs, rhs),
 }
 
 
-CondBlock: ast::Condition<'input> = {
+CondBlock: ast::Condition = {
     <if_block: IfBlock>
     <elif_blocks: ElifBlockList> 
     <else_block: (ElseBlock)?> => ast::Condition{<>}
 }
 
-IfBlock: ast::ConditionPair<'input> = {
+IfBlock: ast::ConditionPair = {
     if_kw <cond: Text> open <body: PCode> end => ast::ConditionPair{<>}
 }
 
-ElifBlockList: Vec<ast::ConditionPair<'input>> = {
+ElifBlockList: Vec<ast::ConditionPair> = {
     <(ElifBlock)*>
 }
 
-ElifBlock: ast::ConditionPair<'input> = {
+ElifBlock: ast::ConditionPair = {
     elif_kw <cond: Text> open <body: PCode> end => ast::ConditionPair{<>}
 }
 
-ElseBlock: Vec<ast::Command<'input>> = {
+ElseBlock: Vec<ast::Command> = {
     else_kw open <PCode> end
 }
 
 
-ForBlock: ast::ForLoop<'input> = {
+ForBlock: ast::ForLoop = {
     <IterForLoop>,
     <CountForLoop>
 }
 
-IterForLoop: ast::ForLoop<'input> = {
+IterForLoop: ast::ForLoop = {
     for_kw <name: Text> in_kw <iter: Text> open <body: PCode> end 
     => ast::ForLoop { 
         kind: ast::ForLoopKind::Iter((name, iter)),
@@ -101,7 +101,7 @@ IterForLoop: ast::ForLoop<'input> = {
     }
 }
 
-CountForLoop:  ast::ForLoop<'input> = {
+CountForLoop:  ast::ForLoop = {
     for_kw <text: Text> eq 
     <begin: Text> colon <end: Text> 
     open <body: PCode> end 
@@ -130,7 +130,13 @@ else_kw = "else";
 in_kw = "in";
 for_kw = "for";
 
-Text: &'input str = <r".+">;
+Text: String = {
+    <list: (Token)+> => {
+        list.into_iter().fold(String::new(), |acc, curr| acc + curr)
+    }
+}
+
+Token: &'input str = <r"[A-Za-z0-9\+\-\*/<>\\\(\)]+">;
 
 match {
     r#"\s+"# => {},
@@ -158,5 +164,5 @@ match {
     r"return" => "return",
     
 } else {
-    r".+"
+    r"[A-Za-z0-9\+\-\*/<>\\\(\)]+"
 }

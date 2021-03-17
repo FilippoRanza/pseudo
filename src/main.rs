@@ -4,6 +4,7 @@ lalrpop_mod!(pseudo_lang);
 
 mod ast;
 mod generator;
+mod string_builder;
 
 use std::path::PathBuf;
 use std::io::{Write, Read, stdout};
@@ -35,6 +36,20 @@ fn load_file(file: &PathBuf) -> std::io::Result<String> {
     Ok(buf)
 }
 
-fn main() {
-    println!("Hello, world!");
+fn run_translation<'a>(code: &'a str) -> Result<String, String> {
+    let parser = pseudo_lang::CodeParser::new();
+    let res = parser.parse(&code);
+    match res {
+        Ok(tree) => Ok(generator::generate(&tree, ' ')),
+        Err(err) => Err(format!("{}", err))
+    }
 }
+
+fn main() -> Result<(), Box<dyn std::error::Error>>{
+    let args = Arguments::from_args();
+    let code = load_file(&args.in_file)?;
+    let latex = run_translation(&code)?;
+    output_latex_code(latex, args.out_file)?;
+    Ok(())
+}
+
