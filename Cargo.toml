@@ -9,4 +9,5 @@ lalrpop = "0.19"
 [dependencies]
 lalrpop-util = "0.19"
 regex = "1"
+sailfish = "0.3.1"
 structopt = "*"

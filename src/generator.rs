@@ -1,12 +1,38 @@
 use crate::ast;
 use crate::string_builder::StringBuilder;
+use sailfish::TemplateOnce;
 
-pub fn generate(code: &ast::Code, indent_ch: char) -> String {
+pub fn generate(code: &ast::Code, label: Option<String>, indent_ch: char) -> String {
     let builder = translate_declaration(StringBuilder::new(2), &code.decl);
     let builder = translate_commands(builder, &code.code);
-    let algo_code = builder.build_string(indent_ch);
-    format!("\\begin{{algorithm}}\n{}\\centering\n{0}\\caption{{{}}}\n{0}\\begin{{algorithmic}}\n{}{0}\\end{{algorithmic}}\n\\end{{algorithm}}",
-     indent_ch, code.caption, algo_code)
+
+    LatexAlgorithm::generate_code(builder, &code.caption, label, indent_ch)
+}
+
+#[derive(TemplateOnce)]
+#[template(path = "latex-algo.stpl", escape = false)]
+struct LatexAlgorithm<'a> {
+    code: String,
+    caption: &'a str,
+    label: Option<String>,
+    indent: char,
+}
+impl<'a> LatexAlgorithm<'a> {
+    fn generate_code(
+        code: StringBuilder,
+        caption: &'a str,
+        label: Option<String>,
+        indent: char,
+    ) -> String {
+        let code = code.build_string(indent);
+        let tmp = Self {
+            code,
+            caption,
+            label,
+            indent,
+        };
+        tmp.render_once().unwrap()
+    }
 }
 
 fn translate_commands(builder: StringBuilder, cmds: &[ast::Command]) -> StringBuilder {

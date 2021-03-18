@@ -1,0 +1,9 @@
+% Automatically generated code
+\begin{algorithm}
+<%= indent %>\centering
+<%= indent %>\caption{<%= caption %>}<% if let Some(label) = label { %>\label{<%= label %>}<%}%>
+<%= indent %>\begin{algorithmic}[1]
+
+<%= code %>
+<%= indent %>\end{algorithmic}
+\end{algorithm}

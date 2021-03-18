@@ -32,11 +32,20 @@ fn get_algorithm_label(label: Option<Option<String>>, file_name: &PathBuf) -> La
 #[derive(Debug)]
 enum LabelResult {
     Success(Option<String>),
-    Error
+    Error,
+}
+impl LabelResult {
+    fn parse_result(self) -> Result<Option<String>, &'static str> {
+        match self {
+            Self::Success(lbl) => Ok(lbl),
+            Self::Error => Err(
+                "Given file name cannot be converted in a UTF-8 string: cannot generate label from file name"
+            )
+        }
+    }
 }
 
-fn label_from_file_name(file_name: &PathBuf) -> LabelResult{
-    
+fn label_from_file_name(file_name: &PathBuf) -> LabelResult {
     let label: Option<String> =
         file_name
             .iter()
@@ -65,9 +74,8 @@ fn remove_extension(mut label: String, file: &PathBuf) -> String {
         format!("algo:{}", label)
     } else {
         format!("algo:{}", label)
-    } 
+    }
 }
-
 
 fn output_latex_code(latex: String, file: Option<PathBuf>) -> std::io::Result<()> {
     let bytes = latex.as_bytes();
@@ -88,11 +96,11 @@ fn load_file(file: &PathBuf) -> std::io::Result<String> {
     Ok(buf)
 }
 
-fn run_translation<'a>(code: &'a str) -> Result<String, String> {
+fn run_translation<'a>(code: &'a str, label: Option<String>) -> Result<String, String> {
     let parser = pseudo_lang::CodeParser::new();
     let res = parser.parse(&code);
     match res {
-        Ok(tree) => Ok(generator::generate(&tree, ' ')),
+        Ok(tree) => Ok(generator::generate(&tree, label, ' ')),
         Err(err) => Err(format!("{}", err)),
     }
 }
@@ -100,7 +108,8 @@ fn run_translation<'a>(code: &'a str) -> Result<String, String> {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Arguments::from_args();
     let code = load_file(&args.in_file)?;
-    let latex = run_translation(&code)?;
+    let label = get_algorithm_label(args.label, &args.in_file).parse_result()?;
+    let latex = run_translation(&code, label)?;
     output_latex_code(latex, args.out_file)?;
     Ok(())
 }
@@ -112,15 +121,17 @@ mod test {
 
     #[test]
     fn test_label_from_file_name() {
-        let file_name = PathBuf::new().join("file").join("inside").join("directory").join("test.algo");
+        let file_name = PathBuf::new()
+            .join("file")
+            .join("inside")
+            .join("directory")
+            .join("test.algo");
         let res = label_from_file_name(&file_name);
         match res {
-            LabelResult::Success(Some(label)) => assert_eq!(label, "algo:file-inside-directory-test"),
-            _ => panic!("This test results in: {:?}", res)
+            LabelResult::Success(Some(label)) => {
+                assert_eq!(label, "algo:file-inside-directory-test")
+            }
+            _ => panic!("This test results in: {:?}", res),
         }
     }
-
-
-
 }
-
