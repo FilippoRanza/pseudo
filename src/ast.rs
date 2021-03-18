@@ -9,13 +9,24 @@ pub enum Command {
     Condition(Condition),
     ForLoop(ForLoop),
     WhileLoop(ConditionPair),
-    Return(String),
+    Return(CodeType),
+    Function(Function)
+}
+
+pub enum CodeType {
+    Name(String),
+    Func(Function)
+}
+
+pub struct Function {
+    pub name: String,
+    pub args: Vec<String>
 }
 
 pub type DeclBlock = Vec<Decl>;
 pub type Decl = (String, String);
 
-pub type Assign = (String, String);
+pub type Assign = (String, CodeType);
 
 pub struct Condition {
     pub if_block: ConditionPair,
@@ -24,7 +35,7 @@ pub struct Condition {
 }
 
 pub struct ConditionPair {
-    pub cond: String,
+    pub cond: CodeType,
     pub body: Vec<Command>,
 }
 
@@ -34,6 +45,6 @@ pub struct ForLoop {
 }
 
 pub enum ForLoopKind {
-    Count((String, String, String)),
-    Iter((String, String)),
+    Count((String, CodeType, CodeType)),
+    Iter((String, CodeType)),
 }

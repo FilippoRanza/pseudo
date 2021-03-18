@@ -19,22 +19,55 @@ Command: ast::Command = {
     <blk: ForBlock> => ast::Command::ForLoop(blk),
     <blk: WhileBlock> => ast::Command::WhileLoop(blk),
     <blk: ReturnBlock> => ast::Command::Return(blk),
+    <blk: FunctionBlock> => ast::Command::Function(blk)
 }
+
+FunctionBlock: ast::Function = {
+    <Function> semicolon 
+}
+
+Function: ast::Function = {
+    <name: Text> open_bracket <args: NameList> close_bracket => ast::Function{<>}
+}
+
+CodeType: ast::CodeType = {
+    <name: Text> => ast::CodeType::Name(name),
+    <func: Function> => ast::CodeType::Func(func)
+}
+
+NameList: Vec<String> = {
+    <names: (<Text> comma)*> <name: (Text)?> => {
+        match name {
+            Some(name) => {
+                let mut names = names;
+                names.push(name);
+                names
+            },
+            None => names
+        }
+    }
+}
+
 
 WhileBlock: ast::ConditionPair = {
-    while_kw <cond: Text> open_brace <body: PCode> close_brace => ast::ConditionPair {<>}
+    while_kw <cond: CodeType> open_brace <body: PCode> close_brace => ast::ConditionPair {<>}
 }
 
-ReturnBlock: String = {
-    return_kw <Text> semicolon
+ReturnBlock: ast::CodeType = {
+    return_kw <CodeType> semicolon
 }
 
 
 DeclList: ast::DeclBlock = {
-    <list: (<Decl> comma)*> <d: Decl> => {
-        let mut list =  list;
-        list.push(d);
-        list
+    <list: (<Decl> comma)*> <d: (Decl)?> => {
+        match d {
+            Some(d) => {
+                let mut list =  list;
+                list.push(d);
+                list
+            },
+            None => list
+        }
     }
 }
 
@@ -44,9 +77,9 @@ Decl: ast::Decl = {
 
 
 AssignBlock: ast::Assign = {
-    <lhs: Text> eq <rhs: Text> semicolon => (lhs, rhs),
-    <lhs: Text> eq_decl <rhs: Text> semicolon => (lhs, rhs),
-    <lhs: Text> eq_arrow <rhs: Text> semicolon => (lhs, rhs),
+    <lhs: Text> eq <rhs: CodeType> semicolon => (lhs, rhs),
+    <lhs: Text> eq_decl <rhs: CodeType> semicolon => (lhs, rhs),
+    <lhs: Text> eq_arrow <rhs: CodeType> semicolon => (lhs, rhs),
 }
 
 
@@ -57,7 +90,7 @@ CondBlock: ast::Condition = {
 }
 
 IfBlock: ast::ConditionPair = {
-    if_kw <cond: Text> open_brace <body: PCode> close_brace => ast::ConditionPair{<>}
+    if_kw <cond: CodeType> open_brace <body: PCode> close_brace => ast::ConditionPair{<>}
 }
 
 ElifBlockList: Vec<ast::ConditionPair> = {
@@ -65,7 +98,7 @@ ElifBlockList: Vec<ast::ConditionPair> = {
 }
 
 ElifBlock: ast::ConditionPair = {
-    elif_kw <cond: Text> open_brace <body: PCode> close_brace => ast::ConditionPair{<>}
+    elif_kw <cond: CodeType> open_brace <body: PCode> close_brace => ast::ConditionPair{<>}
 }
 
 ElseBlock: Vec<ast::Command> = {
@@ -79,7 +112,7 @@ ForBlock: ast::ForLoop = {
 }
 
 IterForLoop: ast::ForLoop = {
-    for_kw <name: Text> in_kw <iter: Text> open_brace <body: PCode> close_brace 
+    for_kw <name: Text> in_kw <iter: CodeType> open_brace <body: PCode> close_brace 
     => ast::ForLoop { 
         kind: ast::ForLoopKind::Iter((name, iter)),
         body
@@ -88,7 +121,7 @@ IterForLoop: ast::ForLoop = {
 
 CountForLoop:  ast::ForLoop = {
     for_kw <text: Text> eq 
-    <begin: Text> colon <close_brace: Text> 
+    <begin: CodeType> colon <close_brace: CodeType> 
     open_brace <body: PCode> close_brace 
     => ast::ForLoop { 
         kind: ast::ForLoopKind::Count((text, begin, close_brace)),
@@ -124,7 +157,7 @@ Text: String = {
     }
 }
 
-Token: &'input str = <r"[A-Za-z0-9\+\-\*/<>\\]+">;
+Token: &'input str = <r"[A-Za-z0-9\+\-\*/<>\\\$\{\}_]+">;
 
 match {
     r#"\s+"# => {},
@@ -153,5 +186,5 @@ match {
     r"return" => "return",
     
 } else {
-    r"[A-Za-z0-9\+\-\*/<>\\]+"
+    r"[A-Za-z0-9\+\-\*/<>\\\$\{\}_]+"
 }

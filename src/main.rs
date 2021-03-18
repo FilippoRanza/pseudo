@@ -17,7 +17,7 @@ struct Arguments {
     in_file: PathBuf,
     #[structopt(help = "Specify output latex algorithm file, by default writes to STDOUT")]
     out_file: Option<PathBuf>,
-    #[structopt(short = "-l", long = "--label", help = "Specify algortithm label")]
+    #[structopt(short = "-l", long = "--label", help ="Specify algorithm label, if label text is not specified the label is generated from input file name")]
     label: Option<Option<String>>,
 }
 
@@ -100,7 +100,7 @@ fn run_translation<'a>(code: &'a str, label: Option<String>) -> Result<String, S
     let parser = pseudo_lang::CodeParser::new();
     let res = parser.parse(&code);
     match res {
-        Ok(tree) => Ok(generator::generate(&tree, label, ' ')),
+        Ok(tree) => Ok(generator::generate(tree, label, ' ')),
         Err(err) => Err(format!("{}", err)),
     }
 }
