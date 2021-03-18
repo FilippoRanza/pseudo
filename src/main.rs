@@ -6,9 +6,10 @@ mod ast;
 mod generator;
 mod string_builder;
 
-use std::path::PathBuf;
-use std::io::{Write, Read, stdout};
+
 use std::fs::File;
+use std::io::{stdout, Read, Write};
+use std::path::PathBuf;
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
@@ -41,15 +42,14 @@ fn run_translation<'a>(code: &'a str) -> Result<String, String> {
     let res = parser.parse(&code);
     match res {
         Ok(tree) => Ok(generator::generate(&tree, ' ')),
-        Err(err) => Err(format!("{}", err))
+        Err(err) => Err(format!("{}", err)),
     }
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>>{
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Arguments::from_args();
     let code = load_file(&args.in_file)?;
     let latex = run_translation(&code)?;
     output_latex_code(latex, args.out_file)?;
     Ok(())
 }
-

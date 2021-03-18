@@ -6,17 +6,7 @@ grammar;
 
 
 pub Code : ast::Code = {
-    <caption: Caption>
-    <code: PseudoCode> => ast::Code{<>}
-
-}
-
-Caption: String = {
-    caption_kw  open <Text> end 
-}
-
-PseudoCode: Vec<ast::Command> = {
-    code_kw open <PCode> end
+    caption_kw <caption: Text> open_bracket <decl: DeclList> close_bracket open_brace <code: PCode> close_brace => ast::Code{<>}
 }
 
 PCode: Vec<ast::Command> = {
@@ -24,7 +14,6 @@ PCode: Vec<ast::Command> = {
 }
 
 Command: ast::Command = {
-    <blk: DeclBlock> => ast::Command::Declaration(blk),
     <blk: AssignBlock> => ast::Command::Assign(blk),
     <blk: CondBlock> => ast::Command::Condition(blk),
     <blk: ForBlock> => ast::Command::ForLoop(blk),
@@ -33,17 +22,13 @@ Command: ast::Command = {
 }
 
 WhileBlock: ast::ConditionPair = {
-    while_kw <cond: Text> open <body: PCode> end => ast::ConditionPair {<>}
+    while_kw <cond: Text> open_brace <body: PCode> close_brace => ast::ConditionPair {<>}
 }
 
 ReturnBlock: String = {
     return_kw <Text> semicolon
 }
 
-
-DeclBlock: ast::DeclBlock = {
-    decl_kw <DeclList> semicolon
-}
 
 DeclList: ast::DeclBlock = {
     <list: (<Decl> comma)*> <d: Decl> => {
@@ -72,7 +57,7 @@ CondBlock: ast::Condition = {
 }
 
 IfBlock: ast::ConditionPair = {
-    if_kw <cond: Text> open <body: PCode> end => ast::ConditionPair{<>}
+    if_kw <cond: Text> open_brace <body: PCode> close_brace => ast::ConditionPair{<>}
 }
 
 ElifBlockList: Vec<ast::ConditionPair> = {
@@ -80,11 +65,11 @@ ElifBlockList: Vec<ast::ConditionPair> = {
 }
 
 ElifBlock: ast::ConditionPair = {
-    elif_kw <cond: Text> open <body: PCode> end => ast::ConditionPair{<>}
+    elif_kw <cond: Text> open_brace <body: PCode> close_brace => ast::ConditionPair{<>}
 }
 
 ElseBlock: Vec<ast::Command> = {
-    else_kw open <PCode> end
+    else_kw open_brace <PCode> close_brace
 }
 
 
@@ -94,7 +79,7 @@ ForBlock: ast::ForLoop = {
 }
 
 IterForLoop: ast::ForLoop = {
-    for_kw <name: Text> in_kw <iter: Text> open <body: PCode> end 
+    for_kw <name: Text> in_kw <iter: Text> open_brace <body: PCode> close_brace 
     => ast::ForLoop { 
         kind: ast::ForLoopKind::Iter((name, iter)),
         body
@@ -103,19 +88,22 @@ IterForLoop: ast::ForLoop = {
 
 CountForLoop:  ast::ForLoop = {
     for_kw <text: Text> eq 
-    <begin: Text> colon <end: Text> 
-    open <body: PCode> end 
+    <begin: Text> colon <close_brace: Text> 
+    open_brace <body: PCode> close_brace 
     => ast::ForLoop { 
-        kind: ast::ForLoopKind::Count((text, begin, end)),
+        kind: ast::ForLoopKind::Count((text, begin, close_brace)),
         body
     }
 }
 
-open = "{";
-end = "}";
-caption_kw = "caption";
+open_brace = "{";
+close_brace = "}";
+
+open_bracket = "(";
+close_bracket = ")";
+
+caption_kw = "func";
 code_kw = "code";
-decl_kw = "decl";
 return_kw = "return";
 semicolon = ";";
 while_kw = "while";
@@ -132,11 +120,11 @@ for_kw = "for";
 
 Text: String = {
     <list: (Token)+> => {
-        list.into_iter().fold(String::new(), |acc, curr| acc + curr)
+        list.join(" ")
     }
 }
 
-Token: &'input str = <r"[A-Za-z0-9\+\-\*/<>\\\(\)]+">;
+Token: &'input str = <r"[A-Za-z0-9\+\-\*/<>\\]+">;
 
 match {
     r#"\s+"# => {},
@@ -144,6 +132,8 @@ match {
     r#"//[^\n]+"# => {},
 
     r"\{" => "{",
+    r"\(" => "(",
+    r"\)" => ")",
     r"\}" => "}",
     r"," => ",",
     r":" => ":",
@@ -153,16 +143,15 @@ match {
     r";" => ";",
 
     r"in" => "in",
-    r"caption" => "caption",
+    r"func" => "func",
     r"code" => "code",
     r"for" => "for",
     r"while" => "while",
     r"if" => "if",
     r"elif" => "elif",
     r"else" => "else",
-    r"decl" => "decl",
     r"return" => "return",
     
 } else {
-    r"[A-Za-z0-9\+\-\*/<>\\\(\)]+"
+    r"[A-Za-z0-9\+\-\*/<>\\]+"
 }
