@@ -75,7 +75,10 @@ fn translate_declaration(builder: StringBuilder, decl: &ast::DeclBlock) -> Strin
 }
 
 fn generate_declaration(decl: &ast::DeclBlock) -> String {
-    let str_vec: Vec<String>= decl.iter().map(|(name, prop)| format!("{}: {}", name, prop)).collect();
+    let str_vec: Vec<String> = decl
+        .iter()
+        .map(|(name, prop)| format!("{}: {}", name, prop))
+        .collect();
     let decl_str = str_vec.join(", ");
     format!(r"\REQUIRE {}", decl_str)
 }
