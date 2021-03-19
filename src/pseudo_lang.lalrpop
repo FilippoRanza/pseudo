@@ -157,7 +157,7 @@ Text: String = {
     }
 }
 
-Token: &'input str = <r"[A-Za-z0-9\+\-\*/<>\\\$\{\}_]+">;
+Token: &'input str = <r"[A-Za-z0-9\+\-\*/<>\\\$\{\}_\.]+">;
 
 match {
     r#"\s+"# => {},
@@ -186,5 +186,5 @@ match {
     r"return" => "return",
     
 } else {
-    r"[A-Za-z0-9\+\-\*/<>\\\$\{\}_]+"
+    r"[A-Za-z0-9\+\-\*/<>\\\$\{\}_\.]+"
 }
