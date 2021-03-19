@@ -54,7 +54,7 @@ fn translate_command(builder: StringBuilder, cmd: ast::Command) -> StringBuilder
 
 fn translate_function_block(builder: StringBuilder, func: ast::Function) -> StringBuilder {
     let call = translate_function_call(func);
-    builder.add_line(format!("{};", call))
+    builder.add_line(format!(r"\STATE {};", call))
 }
 
 fn translate_assign(builder: StringBuilder, assign: ast::Assign) -> StringBuilder {
