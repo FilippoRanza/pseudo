@@ -59,7 +59,7 @@ fn translate_function_block(builder: StringBuilder, func: ast::Function) -> Stri
 
 fn translate_assign(builder: StringBuilder, assign: ast::Assign) -> StringBuilder {
     let rhs = translate_code_type(assign.1);
-    let line = format!(r"\STATE {} \[\leftarrow\] {};", assign.0, rhs);
+    let line = format!(r"\STATE {} $\leftarrow$ {};", assign.0, rhs);
     builder.add_line(line)
 }
 
