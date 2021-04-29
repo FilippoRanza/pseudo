@@ -2,11 +2,11 @@ use crate::ast;
 use crate::string_builder::StringBuilder;
 use sailfish::TemplateOnce;
 
-pub fn generate(code: ast::Code, label: Option<String>, indent_ch: char) -> String {
+pub fn generate(code: ast::Code, label: Option<String>, indent_ch: char, here: bool) -> String {
     let builder = translate_declaration(StringBuilder::new(2), code.decl);
     let builder = translate_commands(builder, code.code);
 
-    LatexAlgorithm::generate_code(builder, code.caption, label, indent_ch)
+    LatexAlgorithm::generate_code(builder, code.caption, label, indent_ch, here)
 }
 
 #[derive(TemplateOnce)]
@@ -16,6 +16,7 @@ struct LatexAlgorithm {
     caption: String,
     label: Option<String>,
     indent: char,
+    here: bool
 }
 impl LatexAlgorithm {
     fn generate_code(
@@ -23,6 +24,7 @@ impl LatexAlgorithm {
         caption: String,
         label: Option<String>,
         indent: char,
+        here: bool
     ) -> String {
         let code = code.build_string(indent);
         let tmp = Self {
@@ -30,6 +32,7 @@ impl LatexAlgorithm {
             caption,
             label,
             indent,
+            here
         };
         tmp.render_once().unwrap()
     }

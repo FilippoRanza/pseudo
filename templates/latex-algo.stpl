@@ -1,5 +1,5 @@
 % Automatically generated code
-\begin{algorithm}
+\begin{algorithm}<%if here { %>[!htb]<% } %>
 <%= indent %>\centering
 <%= indent %>\caption{<%= caption %>}<% if let Some(label) = label { %>\label{<%= label %>}<%}%>
 <%= indent %>\begin{algorithmic}[1]

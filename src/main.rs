@@ -19,6 +19,8 @@ struct Arguments {
     out_file: Option<PathBuf>,
     #[structopt(short = "-l", long = "--label", help ="Specify algorithm label, if label text is not specified the label is generated from input file name")]
     label: Option<Option<String>>,
+    #[structopt(short = "-H", long = "--here", help ="Force algorithm positioning with '!htb'")]
+    force_location: bool,
 }
 
 fn get_algorithm_label(label: Option<Option<String>>, file_name: &PathBuf) -> LabelResult {
@@ -96,11 +98,11 @@ fn load_file(file: &PathBuf) -> std::io::Result<String> {
     Ok(buf)
 }
 
-fn run_translation<'a>(code: &'a str, label: Option<String>) -> Result<String, String> {
+fn run_translation<'a>(code: &'a str, label: Option<String>, force_position: bool) -> Result<String, String> {
     let parser = pseudo_lang::CodeParser::new();
     let res = parser.parse(&code);
     match res {
-        Ok(tree) => Ok(generator::generate(tree, label, ' ')),
+        Ok(tree) => Ok(generator::generate(tree, label, ' ', force_position)),
         Err(err) => Err(format!("{}", err)),
     }
 }
@@ -109,7 +111,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Arguments::from_args();
     let code = load_file(&args.in_file)?;
     let label = get_algorithm_label(args.label, &args.in_file).parse_result()?;
-    let latex = run_translation(&code, label)?;
+    let latex = run_translation(&code, label, args.force_location)?;
     output_latex_code(latex, args.out_file)?;
     Ok(())
 }
