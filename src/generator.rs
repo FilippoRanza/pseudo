@@ -130,7 +130,7 @@ fn translate_for_heading(kind: ast::ForLoopKind) -> String {
         ast::ForLoopKind::Count((var, begin, end)) => {
             let begin = translate_code_type(begin);
             let end = translate_code_type(end);
-            format!(r"\FOR{{{} =  {}:{}}}", var, begin, end)
+            format!(r"\FOR{{{} =  {} \textbf{{to}} {}}}", var, begin, end)
         }
         ast::ForLoopKind::Iter((var, iter)) => format!(r"\FOR{{{} \textbf{{in}}  {}}}", var, translate_code_type(iter)),
     }

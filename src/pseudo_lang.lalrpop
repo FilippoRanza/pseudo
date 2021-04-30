@@ -128,7 +128,7 @@ CountForLoop:  ast::ForLoop = {
         body
     }
 }
-
+label_symbol = "@";
 open_brace = "{";
 close_brace = "}";
 
@@ -136,7 +136,7 @@ open_bracket = "(";
 close_bracket = ")";
 
 caption_kw = "func";
-code_kw = "code";
+
 return_kw = "return";
 semicolon = ";";
 while_kw = "while";
@@ -164,6 +164,7 @@ match {
     r#"/\*([^*]|\*[^/])*\*/"# => {},
     r#"//[^\n]+"# => {},
 
+    r"@" => "@",
     r"\{" => "{",
     r"\(" => "(",
     r"\)" => ")",
@@ -177,14 +178,12 @@ match {
 
     r"in" => "in",
     r"func" => "func",
-    r"code" => "code",
     r"for" => "for",
     r"while" => "while",
     r"if" => "if",
     r"elif" => "elif",
     r"else" => "else",
     r"return" => "return",
-    
 } else {
-    r"[A-Za-z0-9\+\-\*/<>\\\$\{\}_\.]+"
+    r"[A-Za-z0-9\+\-\*/<>\\\$\{\}_\.]+",
 }
